@@ -48,6 +48,7 @@
     border: 1px solid #fff;
     cursor: pointer;
     user-select: none;
+    z-index: 999;
   }
 </style>
 </head>
@@ -87,11 +88,9 @@ function update() {
   clear();
 
   if (autoHunt) {
-    // 오토 모드 움직임
     player.x += Math.sin(Date.now()/200) * 1.5;
     player.y += Math.cos(Date.now()/200) * 1.5;
   } else {
-    // 조이스틱 이동
     player.x += player.dx;
     player.y += player.dy;
   }
@@ -107,13 +106,15 @@ let joyActive = false;
 let joyStart = {x:0, y:0};
 
 document.addEventListener('touchstart', e => {
-  if (e.target.id === "autohunt") return; // 오토 버튼 터치 예외
+  // 버튼 영역 누르면 조이스틱 무시
+  if (e.target.closest('#autohunt')) {
+    return;
+  }
 
   const touch = e.touches[0];
   joyActive = true;
   joyStart = { x: touch.clientX, y: touch.clientY };
 
-  // 조이스틱 위치를 손가락 위치로 이동 & 표시
   joystickBase.style.left = (joyStart.x - 60) + 'px';
   joystickBase.style.top = (joyStart.y - 60) + 'px';
   joystickBase.style.display = 'block';
@@ -127,21 +128,18 @@ document.addEventListener('touchmove', e => {
   const dx = touch.clientX - joyStart.x;
   const dy = touch.clientY - joyStart.y;
 
-  // 거리/각도 계산
   const distance = Math.sqrt(dx*dx + dy*dy);
   const maxDistance = 50;
   const limitedDist = Math.min(distance, maxDistance);
   const angle = Math.atan2(dy, dx);
 
-  // 조이스틱 스틱 위치 이동
   joystickStick.style.left = `${30 + Math.cos(angle) * limitedDist}px`;
   joystickStick.style.top = `${30 + Math.sin(angle) * limitedDist}px`;
 
-  // 조이스틱 베이스도 손가락 따라 이동
+  // 손가락 위치에 따라 조이스틱 전체 이동
   joystickBase.style.left = (touch.clientX - 60) + 'px';
   joystickBase.style.top = (touch.clientY - 60) + 'px';
 
-  // 플레이어 이동 속도
   player.dx = Math.cos(angle) * player.speed * (limitedDist / maxDistance);
   player.dy = Math.sin(angle) * player.speed * (limitedDist / maxDistance);
 
@@ -159,12 +157,14 @@ document.addEventListener('touchend', e => {
 }, {passive:false});
 
 // --------------------- 오토 버튼 ---------------------
-document.getElementById('autohunt').addEventListener('click', () => {
+document.getElementById('autohunt').addEventListener('touchstart', e => {
   autoHunt = !autoHunt;
   document.getElementById('autohunt').style.background = autoHunt
     ? 'rgba(0,255,0,0.3)'
     : 'rgba(255,255,255,0.3)';
-});
+  e.stopPropagation(); // 조이스틱 이벤트로 안 넘어가게 함
+  e.preventDefault();
+}, {passive:false});
 
 update();
 </script>
