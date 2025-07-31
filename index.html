@@ -1,130 +1,130 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Youth Online</title>
 <style>
-  body { margin: 0; background: black; overflow: hidden; }
-  #gameCanvas { background: #222; display: block; margin: 0 auto; width: 100vw; height: 70vh; }
-  #joystick {
-    position: fixed; width: 100px; height: 100px;
-    background: rgba(255,255,255,0.1); border-radius: 50%;
-    display: none; pointer-events: none;
-  }
-  #stick {
-    position: absolute; top: 30px; left: 30px;
-    width: 40px; height: 40px;
-    background: rgba(255,255,255,0.4); border-radius: 50%;
-    transition: transform 0.05s linear;
-  }
-  #autohunt {
-    position: fixed; bottom: 50px; right: 50px;
-    padding: 10px 20px; background: rgba(255,255,255,0.2);
-    border-radius: 8px; color: white; font-size: 16px;
-    user-select: none;
-  }
+body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+}
+#gameCanvas {
+    background: #222;
+    display: block;
+    margin: 0 auto;
+    width: 100vw;
+    height: 70vh;
+}
+#joystick {
+    position: fixed;
+    bottom: 50px;
+    left: 50px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    touch-action: none;
+}
+#stick {
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+    position: absolute;
+    left: 30px;
+    top: 30px;
+}
+#autoBtn {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    padding: 10px 20px;
+    background: yellow;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+}
 </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
-
-<div id="joystick"><div id="stick"></div></div>
-<div id="autohunt">Auto</div>
-
-<script>
-  const joystick = document.getElementById('joystick');
-  const stick = document.getElementById('stick');
-  const autoBtn = document.getElementById('autohunt');
-
-  let touchId = null;
-  let joyX = 0, joyY = 0;
-  window.joyDX = 0;
-  window.joyDY = 0;
-  window.autoMove = false;
-
-  // Auto 버튼 클릭
-  autoBtn.addEventListener('click', () => {
-    window.autoMove = !window.autoMove;
-  });
-
-  document.addEventListener('touchstart', (e) => {
-    if (touchId === null) {
-      const touch = e.touches[0];
-      touchId = touch.identifier;
-
-      // 조이스틱을 손가락 위치에 표시
-      joystick.style.left = (touch.clientX - 50) + 'px';
-      joystick.style.top = (touch.clientY - 50) + 'px';
-      joystick.style.display = 'block';
-    }
-  });
-
-  document.addEventListener('touchmove', (e) => {
-    for (let t of e.touches) {
-      if (t.identifier === touchId) {
-        joyX = t.clientX;
-        joyY = t.clientY;
-
-        // 스틱 이동
-        stick.style.transform = `translate(${joyX - parseInt(joystick.style.left) - 50}px, ${joyY - parseInt(joystick.style.top) - 50}px)`;
-
-        // main.js로 방향 전달
-        const dx = joyX - (parseInt(joystick.style.left) + 50);
-        const dy = joyY - (parseInt(joystick.style.top) + 50);
-        window.joyDX = dx / 40; // 정규화
-        window.joyDY = dy / 40;
-      }
-    }
-  });
-
-  document.addEventListener('touchend', (e) => {
-    joystick.style.display = 'none';
-    stick.style.transform = 'translate(0px, 0px)';
-    touchId = null;
-    window.joyDX = 0;
-    window.joyDY = 0;
-  });
-</script>
+<div id="joystick">
+    <div id="stick"></div>
+</div>
+<button id="autoBtn">AUTO</button>
 
 <script>
-// ====================== main.js ======================
-
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight * 0.7;
 
-let player = { x: canvas.width/2, y: canvas.height/2, size: 20 };
+let player = { x: canvas.width/2, y: canvas.height/2, size: 20, color: "red" };
+let autoMove = false;
+let joystick = document.getElementById("joystick");
+let stick = document.getElementById("stick");
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+let joyActive = false;
+let startX, startY;
+let joyCenterX = joystick.offsetLeft + joystick.offsetWidth / 2;
+let joyCenterY = joystick.offsetTop + joystick.offsetHeight / 2;
 
-  // Auto 모드 → 자동 움직임
-  if (window.autoMove) {
-    player.x += Math.cos(Date.now() / 500) * 2;
-    player.y += Math.sin(Date.now() / 500) * 2;
-  } else {
-    // 조이스틱 움직임 반영
-    if (window.joyDX || window.joyDY) {
-      player.x += window.joyDX * 3;
-      player.y += window.joyDY * 3;
-    }
-  }
-
-  // 플레이어 그리기
-  ctx.fillStyle = "red";
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-  ctx.fill();
-
-  requestAnimationFrame(gameLoop);
+function drawPlayer() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+    ctx.fillStyle = player.color;
+    ctx.fill();
 }
 
+function gameLoop() {
+    if (autoMove) {
+        player.x += 2;
+        if (player.x > canvas.width) player.x = 0;
+    }
+    drawPlayer();
+    requestAnimationFrame(gameLoop);
+}
 gameLoop();
 
-// =====================================================
+joystick.addEventListener("touchstart", e => {
+    joyActive = true;
+    let touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    joystick.style.left = `${startX - 50}px`;
+    joystick.style.top = `${startY - 50}px`;
+    joyCenterX = startX;
+    joyCenterY = startY;
+});
+
+joystick.addEventListener("touchmove", e => {
+    if (!joyActive) return;
+    let touch = e.touches[0];
+    let dx = touch.clientX - joyCenterX;
+    let dy = touch.clientY - joyCenterY;
+    let dist = Math.min(Math.sqrt(dx*dx + dy*dy), 40);
+    let angle = Math.atan2(dy, dx);
+
+    stick.style.left = `${30 + dist * Math.cos(angle)}px`;
+    stick.style.top = `${30 + dist * Math.sin(angle)}px`;
+
+    player.x += Math.cos(angle) * 2;
+    player.y += Math.sin(angle) * 2;
+});
+
+joystick.addEventListener("touchend", () => {
+    joyActive = false;
+    stick.style.left = "30px";
+    stick.style.top = "30px";
+});
+
+document.getElementById("autoBtn").addEventListener("click", () => {
+    autoMove = !autoMove;
+    document.getElementById("autoBtn").style.background = autoMove ? "green" : "yellow";
+});
 </script>
 
 </body>
