@@ -1,129 +1,132 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Youth Online</title>
 <style>
 body {
-    margin: 0;
-    background: black;
-    overflow: hidden;
+  margin: 0;
+  background: black;
+  overflow: hidden;
 }
 #gameCanvas {
-    background: #222;
-    display: block;
-    margin: 0 auto;
-    width: 100vw;
-    height: 70vh;
+  background: #222;
+  display: block;
+  margin: 0 auto;
+  width: 100vw;
+  height: 70vh;
 }
 #joystick {
-    position: fixed;
-    bottom: 50px;
-    left: 50px;
-    width: 100px;
-    height: 100px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 50%;
-    touch-action: none;
+  position: fixed;
+  width: 100px;
+  height: 100px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  display: none; /* 처음엔 숨김 */
+  pointer-events: none;
 }
 #stick {
-    width: 40px;
-    height: 40px;
-    background: rgba(255,255,255,0.4);
-    border-radius: 50%;
-    position: absolute;
-    left: 30px;
-    top: 30px;
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
-#autoBtn {
-    position: fixed;
-    bottom: 50px;
-    right: 50px;
-    padding: 10px 20px;
-    background: yellow;
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
+#autoButton {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px;
+  background: yellow;
 }
 </style>
 </head>
 <body>
 
 <canvas id="gameCanvas"></canvas>
+
 <div id="joystick">
-    <div id="stick"></div>
+  <div id="stick"></div>
 </div>
-<button id="autoBtn">AUTO</button>
+
+<button id="autoButton">AUTO</button>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight * 0.7;
 
-let player = { x: canvas.width/2, y: canvas.height/2, size: 20, color: "red" };
-let autoMove = false;
-let joystick = document.getElementById("joystick");
-let stick = document.getElementById("stick");
+let player = {x: canvas.width/2, y: canvas.height/2, size: 20};
+let auto = false;
 
-let joyActive = false;
-let startX, startY;
-let joyCenterX = joystick.offsetLeft + joystick.offsetWidth / 2;
-let joyCenterY = joystick.offsetTop + joystick.offsetHeight / 2;
+// AUTO 버튼
+document.getElementById('autoButton').addEventListener('click', () => {
+  auto = !auto;
+});
 
+// 플레이어 그리기
 function drawPlayer() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-    ctx.fillStyle = player.color;
-    ctx.fill();
+  ctx.fillStyle = "red";
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.size, 0, Math.PI*2);
+  ctx.fill();
 }
 
-function gameLoop() {
-    if (autoMove) {
-        player.x += 2;
-        if (player.x > canvas.width) player.x = 0;
-    }
-    drawPlayer();
-    requestAnimationFrame(gameLoop);
+// 게임 루프
+function loop() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawPlayer();
+
+  if (auto) {
+    player.x += 1;
+    if (player.x > canvas.width) player.x = 0;
+  }
+
+  requestAnimationFrame(loop);
 }
-gameLoop();
+loop();
 
-joystick.addEventListener("touchstart", e => {
-    joyActive = true;
-    let touch = e.touches[0];
-    startX = touch.clientX;
-    startY = touch.clientY;
-    joystick.style.left = `${startX - 50}px`;
-    joystick.style.top = `${startY - 50}px`;
-    joyCenterX = startX;
-    joyCenterY = startY;
+// ----- 플로팅 조이스틱 -----
+const joystick = document.getElementById('joystick');
+const stick = document.getElementById('stick');
+
+let baseX = 0, baseY = 0;
+
+canvas.addEventListener('touchstart', function(e) {
+  const touch = e.touches[0];
+  baseX = touch.clientX;
+  baseY = touch.clientY;
+
+  joystick.style.left = (baseX - 50) + 'px';
+  joystick.style.top = (baseY - 50) + 'px';
+  joystick.style.display = 'block';
 });
 
-joystick.addEventListener("touchmove", e => {
-    if (!joyActive) return;
-    let touch = e.touches[0];
-    let dx = touch.clientX - joyCenterX;
-    let dy = touch.clientY - joyCenterY;
-    let dist = Math.min(Math.sqrt(dx*dx + dy*dy), 40);
-    let angle = Math.atan2(dy, dx);
+canvas.addEventListener('touchmove', function(e) {
+  const touch = e.touches[0];
+  const dx = touch.clientX - baseX;
+  const dy = touch.clientY - baseY;
 
-    stick.style.left = `${30 + dist * Math.cos(angle)}px`;
-    stick.style.top = `${30 + dist * Math.sin(angle)}px`;
+  const dist = Math.min(50, Math.hypot(dx, dy)); // 반경 50 제한
+  const angle = Math.atan2(dy, dx);
 
-    player.x += Math.cos(angle) * 2;
-    player.y += Math.sin(angle) * 2;
+  const stickX = Math.cos(angle) * dist;
+  const stickY = Math.sin(angle) * dist;
+
+  stick.style.transform = `translate(${stickX}px, ${stickY}px)`;
+
+  // 이동 적용
+  player.x += Math.cos(angle) * (dist / 10);
+  player.y += Math.sin(angle) * (dist / 10);
 });
 
-joystick.addEventListener("touchend", () => {
-    joyActive = false;
-    stick.style.left = "30px";
-    stick.style.top = "30px";
-});
-
-document.getElementById("autoBtn").addEventListener("click", () => {
-    autoMove = !autoMove;
-    document.getElementById("autoBtn").style.background = autoMove ? "green" : "yellow";
+canvas.addEventListener('touchend', function() {
+  joystick.style.display = 'none';
+  stick.style.transform = 'translate(-50%, -50%)';
 });
 </script>
 
