@@ -1,66 +1,105 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Youth Online</title>
-<link rel="stylesheet" href="./css/style.css">
 <style>
   body {
     margin: 0;
     background: black;
     overflow: hidden;
   }
+
   #gameCanvas {
-    background: #222; /* 임시 배경 */
+    background: #222;
     display: block;
     margin: 0 auto;
     width: 100vw;
     height: 70vh;
   }
+
   #joystick {
     position: fixed;
-    bottom: 50px;
-    left: 50px;
     width: 100px;
     height: 100px;
     background: rgba(255,255,255,0.1);
     border-radius: 50%;
+    display: none; /* 처음엔 숨김 */
+    pointer-events: none; /* 터치 방해 안 하게 */
   }
+
   #stick {
+    position: absolute;
+    top: 30px;
+    left: 30px;
     width: 40px;
     height: 40px;
     background: rgba(255,255,255,0.4);
     border-radius: 50%;
-    position: relative;
-    top: 30px;
-    left: 30px;
+    transition: transform 0.05s linear; /* 부드럽게 이동 */
   }
+
   #autohunt {
     position: fixed;
     bottom: 50px;
     right: 50px;
-    padding: 15px 25px;
-    background: rgba(255,255,255,0.3);
-    border-radius: 10px;
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px;
     color: white;
-    font-weight: bold;
+    font-size: 16px;
+    user-select: none;
   }
 </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+  <!-- 게임 화면 -->
+  <canvas id="gameCanvas"></canvas>
 
-<!-- 조이스틱 -->
-<div id="joystick">
-  <div id="stick"></div>
-</div>
+  <!-- 조이스틱 -->
+  <div id="joystick">
+    <div id="stick"></div>
+  </div>
 
-<!-- 오토 버튼 -->
-<div id="autohunt">Auto</div>
+  <!-- 오토 버튼 -->
+  <div id="autohunt">Auto</div>
 
-<!-- 스크립트 불러오기 -->
-<script src="joystick.js"></script>
+<script>
+  const joystick = document.getElementById('joystick');
+  const stick = document.getElementById('stick');
+
+  let startX = 0, startY = 0;
+
+  // 터치 시작 → 조이스틱 위치 이동 + 표시
+  document.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+
+    joystick.style.left = (startX - 50) + 'px';
+    joystick.style.top = (startY - 50) + 'px';
+    joystick.style.display = 'block';
+  });
+
+  // 터치 이동 → 스틱 이동
+  document.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    const distance = Math.min(Math.sqrt(dx*dx + dy*dy), 40);
+    const angle = Math.atan2(dy, dx);
+
+    stick.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
+  });
+
+  // 터치 끝 → 원위치 + 숨김
+  document.addEventListener('touchend', () => {
+    stick.style.transform = 'translate(0px, 0px)';
+    joystick.style.display = 'none';
+  });
+</script>
+
 <script src="main.js"></script>
 </body>
 </html>
