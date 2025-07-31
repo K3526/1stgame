@@ -1,62 +1,50 @@
-class Joystick {
-    constructor(container, stick) {
-        this.container = container;
-        this.stick = stick;
-        this.active = false;
-        this.value = { x: 0, y: 0 };
+const joystick = document.getElementById('joystick');
+const stick = document.getElementById('stick');
 
-        // 마우스 이벤트
-        this.container.addEventListener("mousedown", this.start.bind(this));
-        window.addEventListener("mousemove", this.move.bind(this));
-        window.addEventListener("mouseup", this.end.bind(this));
+let dragging = false;
+let startX, startY;
 
-        // 터치 이벤트
-        this.container.addEventListener("touchstart", this.start.bind(this), { passive: false });
-        window.addEventListener("touchmove", this.move.bind(this), { passive: false });
-        window.addEventListener("touchend", this.end.bind(this));
-    }
+joystick.addEventListener('touchstart', function (e) {
+    dragging = true;
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
 
-    start(evt) {
-        evt.preventDefault();
-        this.active = true;
-        this.stick.style.transition = "0s";
-    }
+    // 조이스틱을 손가락 시작 위치로 이동
+    joystick.style.left = `${startX - joystick.offsetWidth / 2}px`;
+    joystick.style.top = `${startY - joystick.offsetHeight / 2}px`;
+});
 
-    move(evt) {
-        if (!this.active) return;
-        evt.preventDefault();
+joystick.addEventListener('touchmove', function (e) {
+    if (!dragging) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
 
-        let clientX, clientY;
-        if (evt.changedTouches) {
-            clientX = evt.changedTouches[0].clientX;
-            clientY = evt.changedTouches[0].clientY;
-        } else {
-            clientX = evt.clientX;
-            clientY = evt.clientY;
-        }
+    // 안쪽 스틱 이동 (손가락 위치 비율)
+    const maxDistance = 50;
+    const distance = Math.min(Math.sqrt(dx * dx + dy * dy), maxDistance);
+    const angle = Math.atan2(dy, dx);
 
-        const rect = this.container.getBoundingClientRect();
-        const dx = clientX - rect.left - rect.width / 2;
-        const dy = clientY - rect.top - rect.height / 2;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const maxDist = rect.width / 2;
+    stick.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
 
-        if (dist > maxDist) {
-            const angle = Math.atan2(dy, dx);
-            this.value.x = Math.cos(angle);
-            this.value.y = Math.sin(angle);
-            this.stick.style.transform = `translate(${Math.cos(angle) * maxDist}px, ${Math.sin(angle) * maxDist}px)`;
-        } else {
-            this.value.x = dx / maxDist;
-            this.value.y = dy / maxDist;
-            this.stick.style.transform = `translate(${dx}px, ${dy}px)`;
-        }
-    }
+    // 플레이어 속도 반영
+    player.dx = Math.cos(angle) * player.speed * (distance / maxDistance);
+    player.dy = Math.sin(angle) * player.speed * (distance / maxDistance);
 
-    end() {
-        this.active = false;
-        this.value = { x: 0, y: 0 };
-        this.stick.style.transition = ".2s";
-        this.stick.style.transform = `translate(0px, 0px)`;
-    }
-}
+    e.preventDefault();
+}, { passive: false });
+
+joystick.addEventListener('touchend', function () {
+    dragging = false;
+
+    // 스틱 원래 자리로 부드럽게 복귀
+    stick.style.transition = '0.2s';
+    stick.style.transform = 'translate(0px, 0px)';
+    setTimeout(() => {
+        stick.style.transition = '0s';
+    }, 200);
+
+    player.dx = 0;
+    player.dy = 0;
+});
