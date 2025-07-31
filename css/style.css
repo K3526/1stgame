@@ -1,0 +1,47 @@
+body {
+    margin: 0;
+    background: #000;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    display: block;
+    margin: 0 auto;
+    background: #222;
+}
+
+#joystick-container {
+    position: fixed;
+    bottom: 50px;
+    left: 50px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    touch-action: none;
+}
+
+#joystick {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    position: relative;
+    top: 30px;
+    left: 30px;
+    transition: 0.2s;
+}
+
+#auto-btn {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: yellow;
+    color: black;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+}
