@@ -1,88 +1,23 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Youth Online</title>
-    <style>
-        body {
-            background-color: #222;
-            margin: 0;
-            overflow: hidden;
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            background: #111;
-        }
-        #joystick {
-            position: fixed;
-            left: 20px;
-            bottom: 20px;
-            width: 100px;
-            height: 100px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            touch-action: none;
-        }
-        #autoBtn {
-            position: fixed;
-            right: 20px;
-            bottom: 40px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background: gray;
-            border: none;
-            border-radius: 5px;
-            color: white;
-        }
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Youth Online</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="joystick"></div>
-    <button id="autoBtn">Auto</button>
+<canvas id="gameCanvas"></canvas>
 
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+<!-- 조이스틱 -->
+<div id="joystick">
+  <div id="stick"></div>
+</div>
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+<!-- 오토 버튼 -->
+<div id="autohunt">Auto</div>
 
-        let player = { x: 100, y: 100, size: 40, color: "yellow", speed: 3 };
-        let keys = {};
-        let autoMode = false;
-
-        document.addEventListener("keydown", e => keys[e.key] = true);
-        document.addEventListener("keyup", e => keys[e.key] = false);
-
-        document.getElementById("autoBtn").addEventListener("click", () => {
-            autoMode = !autoMode;
-            document.getElementById("autoBtn").style.background = autoMode ? "green" : "gray";
-        });
-
-        function movePlayer() {
-            if (!autoMode) {
-                if (keys["ArrowUp"] || keys["w"]) player.y -= player.speed;
-                if (keys["ArrowDown"] || keys["s"]) player.y += player.speed;
-                if (keys["ArrowLeft"] || keys["a"]) player.x -= player.speed;
-                if (keys["ArrowRight"] || keys["d"]) player.x += player.speed;
-            } else {
-                player.x += Math.cos(Date.now() / 500) * 2;
-                player.y += Math.sin(Date.now() / 500) * 2;
-            }
-        }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            movePlayer();
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.size, player.size);
-            requestAnimationFrame(gameLoop);
-        }
-
-        gameLoop();
-    </script>
+<!-- 스크립트 불러오기 -->
+<script src="joystick.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
