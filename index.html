@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Youth Online</title>
+<style>
+  body {
+    margin: 0;
+    background: #222;
+    overflow: hidden;
+    touch-action: none;
+  }
+  canvas {
+    display: block;
+    background: url('background.png') repeat;
+  }
+  #joystick {
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    touch-action: none;
+  }
+  #stick {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    top: 30px;
+    left: 30px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+  }
+  #autohunt {
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    padding: 15px 20px;
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 1px solid #fff;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="joystick">
+  <div id="stick"></div>
+</div>
+<div id="autohunt">Auto</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let player = { x: 200, y: 200, size: 40, speed: 2, dx: 0, dy: 0 };
+let autoHunt = false;
+
+function drawPlayer() {
+  ctx.fillStyle = 'yellow';
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+}
+
+function clear() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function update() {
+  clear();
+
+  // 이동
+  player.x += player.dx;
+  player.y += player.dy;
+
+  // Auto Hunt 동작
+  if (autoHunt) {
+    player.x += Math.sin(Date.now() / 200) * 1.5;
+    player.y += Math.cos(Date.now() / 200) * 1.5;
+  }
+
+  drawPlayer();
+  requestAnimationFrame(update);
+}
+
+// 조이스틱 로직
+const joystick = document.getElementById('joystick');
+const stick = document.getElementById('stick');
+let joyActive = false;
+let joyCenter = { x: 0, y: 0 };
+
+joystick.addEventListener('touchstart', e => {
+  joyActive = true;
+  const rect = joystick.getBoundingClientRect();
+  joyCenter = {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2
+  };
+}, { passive: false });
+
+joystick.addEventListener('touchmove', e => {
+  if (!joyActive) return;
+  const touch = e.touches[0];
+  const dx = touch.clientX - joyCenter.x;
+  const dy = touch.clientY - joyCenter.y;
+
+  // 조이스틱 이동 제한 반경
+  const distance = Math.min(Math.sqrt(dx * dx + dy * dy), 50);
+  const angle = Math.atan2(dy, dx);
+
+  // 스틱 위치 업데이트
+  stick.style.left = `${30 + Math.cos(angle) * distance}px`;
+  stick.style.top = `${30 + Math.sin(angle) * distance}px`;
+
+  // 플레이어 속도 반영
+  player.dx = Math.cos(angle) * player.speed * (distance / 50);
+  player.dy = Math.sin(angle) * player.speed * (distance / 50);
+
+  e.preventDefault();
+}, { passive: false });
+
+joystick.addEventListener('touchend', e => {
+  joyActive = false;
+  // 스틱 중앙 복귀
+  stick.style.left = '30px';
+  stick.style.top = '30px';
+  player.dx = 0;
+  player.dy = 0;
+  e.preventDefault();
+}, { passive: false });
+
+// Auto Hunt 버튼
+document.getElementById('autohunt').addEventListener('click', () => {
+  autoHunt = !autoHunt;
+  document.getElementById('autohunt').style.background =
+    autoHunt ? 'rgba(0,255,0,0.3)' : 'rgba(255,255,255,0.3)';
+});
+
+// 게임 시작
+update();
+</script>
+</body>
+</html>
