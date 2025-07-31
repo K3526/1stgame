@@ -4,8 +4,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Youth Online</title>
 <link rel="stylesheet" href="./css/style.css">
+<style>
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+  }
+  #gameCanvas {
+    background: #222; /* 임시 배경 */
+    display: block;
+    margin: 0 auto;
+    width: 100vw;
+    height: 70vh;
+  }
+  #joystick {
+    position: fixed;
+    bottom: 50px;
+    left: 50px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
+  #stick {
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 50%;
+    position: relative;
+    top: 30px;
+    left: 30px;
+  }
+  #autohunt {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    padding: 15px 25px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+  }
+</style>
 </head>
 <body>
+
 <canvas id="gameCanvas"></canvas>
 
 <!-- 조이스틱 -->
